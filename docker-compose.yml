@@ -1,0 +1,64 @@
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=jobapi.settings
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/jobapi
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - jobapi-network
+
+  worker:
+    build: .
+    command: celery -A jobapi worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=jobapi.settings
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/jobapi
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - jobapi-network
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=jobapi
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - jobapi-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - jobapi-network
+
+volumes:
+  postgres_data:
+
+networks:
+  jobapi-network:
+    driver: bridge

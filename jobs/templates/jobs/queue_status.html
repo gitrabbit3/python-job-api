@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Queue Status</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overscroll-behavior: contain;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #111111;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            overflow: hidden;
+            border: 1px solid #333333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #1a1a1a;
+        }
+
+        .stat-card {
+            background: #222222;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            transition: transform 0.2s;
+            border: 1px solid #333333;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            border-color: #667eea;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .stat-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background: #28a745;
+        }
+
+        .status-inactive {
+            background: #dc3545;
+        }
+
+        .jobs-section {
+            padding: 30px;
+            background: #1a1a1a;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .job-card {
+            background: #222222;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .job-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-color: #667eea;
+            background: #2a2a2a;
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .job-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #888888;
+        }
+
+        .job-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #2d2d1a;
+            color: #ffd700;
+            border: 1px solid #ffd700;
+        }
+
+        .status-processing {
+            background: #1a2d2d;
+            color: #00bfff;
+            border: 1px solid #00bfff;
+        }
+
+        .status-completed {
+            background: #1a2d1a;
+            color: #90ee90;
+            border: 1px solid #90ee90;
+        }
+
+        .status-failed {
+            background: #2d1a1a;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+        .job-time {
+            font-size: 0.8rem;
+            color: #888888;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .error-message {
+            background: #2d1a1a;
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #ff6b6b;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888888;
+        }
+
+        .job-summary {
+            margin-top: 10px;
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 4px;
+            border: 1px solid #444444;
+        }
+
+        .job-error {
+            margin-top: 10px;
+            padding: 10px;
+            background: #2d1a1a;
+            border-radius: 4px;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+        .expand-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+
+        .expand-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .mermaid-diagram {
+            background: #1a1a1a;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            border: 1px solid #333333;
+            overflow-x: auto;
+        }
+
+        .mermaid-diagram svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Job API Status</h1>
+        </div>
+
+        {% if error %}
+        <div class="error-message">
+            <strong>Connection Error:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ queue_stats.queue_length }}</div>
+                <div class="stat-label">Jobs in Queue</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ queue_stats.total_jobs }}</div>
+                <div class="stat-label">Total Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ queue_stats.pending_jobs }}</div>
+                <div class="stat-label">Pending Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ queue_stats.processing_jobs }}</div>
+                <div class="stat-label">Processing Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ queue_stats.completed_jobs }}</div>
+                <div class="stat-label">Completed Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ queue_stats.failed_jobs }}</div>
+                <div class="stat-label">Failed Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-text">
+                    <span class="status-indicator {% if queue_stats.redis_connected %}status-active{% else %}status-inactive{% endif %}"></span>
+                    {% if queue_stats.redis_connected %}Active{% else %}Inactive{% endif %}
+                </div>
+                <div class="stat-label">Redis Status</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-text">
+                    <span class="status-indicator {% if queue_stats.celery_connected %}status-active{% else %}status-inactive{% endif %}"></span>
+                    {% if queue_stats.celery_connected %}Active{% else %}Inactive{% endif %}
+                </div>
+                <div class="stat-label">Celery Status</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ queue_stats.worker_count }}</div>
+                <div class="stat-label">Active Workers</div>
+            </div>
+        </div>
+
+        <div class="jobs-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="section-title">Recent Jobs</h2>
+                <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+            </div>
+
+            {% if recent_jobs %}
+                {% for job in recent_jobs %}
+                <div class="job-card">
+                    <div class="job-header">
+                        <div>
+                            <div class="job-id">{{ job.event_id }}</div>
+                            <div class="job-time">{{ job.created_at|date:"M d, Y H:i:s" }}</div>
+                        </div>
+                        <span class="job-status status-{{ job.status }}">{{ job.status|title }}</span>
+                    </div>
+                    {% if job.status == 'completed' and job.summary %}
+                    <div class="job-summary">
+                        <strong>Summary:</strong>
+                        <div class="summary-content" style="margin-top: 8px; line-height: 1.5;">
+                            <div class="summary-preview">{{ job.summary|truncatewords:30|safe }}</div>
+                            <div class="summary-full" style="display: none;">{{ job.summary|safe }}</div>
+                            <button class="expand-btn" onclick="toggleSummary(this)">Show more</button>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if job.status == 'completed' and job.checklist %}
+                    <div class="job-summary" style="margin-top: 10px;">
+                        <strong>Checklist:</strong>
+                        <div class="checklist-content" style="margin-top: 8px; line-height: 1.5;">
+                            <div class="checklist-preview">{{ job.checklist|truncatewords:30|safe }}</div>
+                            <div class="checklist-full" style="display: none;">{{ job.checklist|safe }}</div>
+                            <button class="expand-btn" onclick="toggleChecklist(this)">Show more</button>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if job.status == 'completed' and job.diagram %}
+                    <div class="job-summary" style="margin-top: 10px;">
+                        <strong>Workflow Diagram:</strong>
+                        <div class="diagram-content" style="margin-top: 8px;">
+                            <div class="diagram-preview">
+                                <code style="background: #2a2a2a; padding: 8px; border-radius: 4px; font-size: 0.8rem; color: #cccccc;">{{ job.diagram|truncatewords:20 }}</code>
+                            </div>
+                            <div class="diagram-full" style="display: none;">
+                                <div class="mermaid-diagram" id="diagram-{{ job.event_id }}">{{ job.diagram }}</div>
+                            </div>
+                            <button class="expand-btn" onclick="toggleDiagram(this)">Show diagram</button>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if job.status == 'failed' and job.error_message %}
+                    <div class="job-error">
+                        <strong>Error:</strong> {{ job.error_message|truncatewords:20 }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="loading">
+                    <p>No jobs found. Create your first job to get started!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+
+        function toggleSummary(button) {
+            const content = button.parentElement;
+            const preview = content.querySelector('.summary-preview');
+            const full = content.querySelector('.summary-full');
+
+            if (preview.style.display !== 'none') {
+                preview.style.display = 'none';
+                full.style.display = 'block';
+                button.textContent = 'Show less';
+            } else {
+                preview.style.display = 'block';
+                full.style.display = 'none';
+                button.textContent = 'Show more';
+            }
+        }
+
+                function toggleChecklist(button) {
+            const content = button.parentElement;
+            const preview = content.querySelector('.checklist-preview');
+            const full = content.querySelector('.checklist-full');
+
+            if (preview.style.display !== 'none') {
+                preview.style.display = 'none';
+                full.style.display = 'block';
+                button.textContent = 'Show less';
+            } else {
+                preview.style.display = 'block';
+                full.style.display = 'none';
+                button.textContent = 'Show more';
+            }
+        }
+
+                function toggleDiagram(button) {
+            const content = button.parentElement;
+            const preview = content.querySelector('.diagram-preview');
+            const full = content.querySelector('.diagram-full');
+
+            if (preview.style.display !== 'none') {
+                preview.style.display = 'none';
+                full.style.display = 'block';
+                button.textContent = 'Hide diagram';
+
+                const diagramElement = full.querySelector('.mermaid-diagram');
+                const diagramId = diagramElement.id;
+
+                try {
+                    diagramElement.innerHTML = diagramElement.textContent;
+                    mermaid.init(undefined, `#${diagramId}`);
+                } catch (error) {
+                    console.error('Mermaid rendering error:', error);
+                    diagramElement.innerHTML = '<div style="color: #ff6b6b; padding: 10px;">Error rendering diagram. Please check the Mermaid syntax.</div>';
+                }
+            } else {
+                preview.style.display = 'block';
+                full.style.display = 'none';
+                button.textContent = 'Show diagram';
+            }
+        }
+    </script>
+</body>
+</html>
