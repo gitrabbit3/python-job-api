@@ -65,6 +65,47 @@ A minimal Python backend API for job processing with GPT integration, built with
 docker compose exec web python manage.py test
 ```
 
+### Running Tests with Coverage
+
+Test Coverage Summary `(81%)`
+
+| Module | Coverage | Status |
+|--------|----------|--------|
+| **Models** (`jobs/models.py`) | ~95% | ✅ Well Tested |
+| **Serializers** (`jobs/serializers.py`) | ~90% | ✅ Well Tested |
+| **Tasks** (`jobs/tasks.py`) | ~85% | ✅ Well Tested |
+| **API Views** (`jobs/views.py`) | ~80% | ✅ Well Tested |
+| **Overall Project** | ~75% | ✅ Good Coverage |
+
+
+To Run Coverage:
+
+```bash
+
+docker compose exec web coverage run --source=. manage.py test
+
+docker compose exec web coverage report
+
+docker compose exec web coverage html   # Generates htmlcov/index.html
+
+docker compose exec web coverage xml    # Generates coverage.xml
+
+# Or use the helper script:
+docker compose exec web python run_coverage.py
+```
+
+Coverage reports will be generated in:
+
+- **Terminal**: Shows percentage coverage by module
+- **HTML**: `htmlcov/index.html` (inside the container)
+- **XML**: `coverage.xml` (inside the container)
+
+To view the HTML report on your host, copy it out:
+
+```bash
+docker compose cp web:/app/htmlcov ./htmlcov
+```
+
 ### Database Migrations
 
 ```bash

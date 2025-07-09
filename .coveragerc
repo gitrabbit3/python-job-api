@@ -1,0 +1,43 @@
+[run]
+source = .
+omit =
+    */tests/*
+    */test_*
+    */migrations/*
+    */settings/*
+    manage.py
+    */venv/*
+    */env/*
+    */.venv/*
+    */.env/*
+    */__pycache__/*
+    */celery.py
+    */wsgi.py
+    */asgi.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+    def __str__
+    def __repr__
+    def __eq__
+    def __hash__
+    def __lt__
+    def __le__
+    def __gt__
+    def __ge__
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml
