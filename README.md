@@ -6,10 +6,10 @@ A minimal Python backend API for job processing with GPT integration, built with
 
 ## Features
 
-- **Job Creation**: POST `/api/jobs` returns job ID `event_id` in <200ms
+- **Job Creation**: POST `/jobs` returns job ID `event_id` in <200ms
 - **Asynchronous Job Processing**: Celery workers process jobs concurrently
 - **Two-Step GPT Chain**: Summarize → Generate checklist workflow
-- **Real-time Status**: GET `/api/jobs/{event_id}` returns current status and results
+- **Real-time Status**: GET `/jobs/{event_id}` returns current status and results
 - **Swagger Docs OpenAPI**: Interactive API documentation
 - **Comprehensive Testing**: Unit tests with proper mocking
 - **Status Dashboard**: Visual overview of job queue, worker, and backend status
@@ -53,9 +53,10 @@ A minimal Python backend API for job processing with GPT integration, built with
    ```
 
 5. **Access the api**:
-   - **API Base**: [http://localhost:8000/api/](http://localhost:8000/api/)
-   - **API Documentation (Swagger UI)**: [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/)
-   - **Status Dashboard**: [http://localhost:8000/api/queue](http://localhost:8000/api/queue)
+   - **API Base**: [http://localhost:8000/](http://localhost:8000/)
+
+- **API Documentation (Swagger UI)**: [http://localhost:8000/docs/](http://localhost:8000/docs/)
+- **Status Dashboard**: [http://localhost:8000/queue](http://localhost:8000/queue)
 
 ## Development
 
@@ -76,7 +77,6 @@ Test Coverage Summary `(81%)`
 | **Tasks** (`jobs/tasks.py`) | ~85% | ✅ Well Tested |
 | **API Views** (`jobs/views.py`) | ~80% | ✅ Well Tested |
 | **Overall Project** | ~75% | ✅ Good Coverage |
-
 
 To Run Coverage:
 
@@ -124,14 +124,14 @@ docker compose logs worker
 ### Create Job
 
 ```bash
-POST /api/jobs/
+POST /jobs/
 # Returns: {"event_id": "uuid"}
 ```
 
 ### Get Job Status
 
 ```bash
-GET /api/jobs/{event_id}/
+GET /jobs/{event_id}/
 # Returns: {"event_id": "uuid", "status": "pending|processing|completed|failed", "result": { "summary": "...", "checklist": "...", "diagram": "..."}}
 ```
 
@@ -154,10 +154,10 @@ GET /api/jobs/{event_id}/
 
 **Performance Choice**:
 
-- POST `/api/jobs`: we immediately create jobs and return job event id to reduce the processing time and keep response time below 200ms.
+- POST `/jobs`: we immediately create jobs and return job event id to reduce the processing time and keep response time below 200ms.
 - While in the background we run asynchronous job processing which prevents API blocking
 - Redis as message broker for speed
-- GET `/api/jobs/{event_id}`:
+- GET `/jobs/{event_id}`:
   - Used Database indexing on event_id for fast lookups
 
 ### AI Usage Patterns
